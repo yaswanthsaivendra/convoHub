@@ -9,7 +9,32 @@
 
 <div class="lg:w-2/4 mx-4 lg:mx-auto p-4 bg-white rounded-xl">
     <div class="chat-messages space-y-3" id="chat-messages">
-        {% for m in messages %}<b>{{ m.user.username }}</b>: {{ m.content }}<br>{% endfor %}
+        {% for m in messages %}
+            {% if m.user.username == request.user.username %}
+                {% if m.is_fog %}
+                <div class="flex justify-end">
+                    {% for word in m.content %}
+                        <span class="bg-{{word.color_class}}-400">{{word.word}}</span>&nbsp
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <div class="flex justify-end"> {{ m.content }} </div>
+                {% endif %}
+            {% else %}
+                {% if m.is_fog %}
+                <div>
+                    <b>{{ m.user.username }}</b>: 
+
+                    {% for word in m.content %}
+                        <span class="bg-{{word.color_class}}-400">{{word.word}}</span>&nbsp
+                    {% endfor %}
+                </div>
+                {% else %}
+                    <div><b>{{ m.user.username }}</b>: {{ m.content }}<br></div>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+
     </div>
 </div>
 
@@ -46,12 +71,55 @@
 
     chatSocket.onmessage = function(e) {
         const data = JSON.parse(e.data);
+        console.log(data);
 
-        if (data.message) {
-            document.querySelector('#chat-messages').innerHTML += ('<b>' + data.username + '</b>: ' + data.message + '<br>');
-        } else {
-            alert('The message was empty!')
+        if(data.category == 'joining') {
+            document.querySelector('#chat-messages').innerHTML += (
+                '<div class="text-center">' +  data.username + ' ' + data.message + '</div>'
+                );
         }
+        else if(data.category == 'message') {
+            if(data.username == userName) {
+                if(data.is_fog) {
+                    var htmlString = '<div class="flex justify-end">';
+                    for (var i = 0; i < data.message.length; i++) {
+                        var word = data.message[i].word;
+                        var color_class = data.message[i].color_class;
+
+                        htmlString += '<span class="bg-' + color_class + '-400">' + word + '</span>&nbsp'
+                    }
+                    htmlString += '</div>';
+
+                    document.querySelector('#chat-messages').innerHTML += htmlString;
+                }
+                else {
+                    document.querySelector('#chat-messages').innerHTML += (
+                        '<div class="flex justify-end">' + data.message + '</div>'
+                    );
+                }
+            }
+            else {
+                if(data.is_fog) {
+                    var htmlString = '<b>' + data.username + '</b>: ';
+                    for (var i = 0; i < data.message.length; i++) {
+                        var word = data.message[i].word;
+                        var color_class = data.message[i].color_class;
+
+                        htmlString += '<span class="bg-' + color_class + '-400">' + word + '</span>&nbsp'
+                    }
+                    htmlString += '<br>';
+
+                    document.querySelector('#chat-messages').innerHTML += htmlString;
+                }
+                else {
+                    document.querySelector('#chat-messages').innerHTML += (
+                        '<b>' + data.username + '</b>: ' + data.message + '<br>'
+                    );
+                }
+               
+            }
+        }
+
 
         scrollToBottom();
     };

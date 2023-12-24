@@ -4,6 +4,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
 
 from .models import Room, Message
+from rooms.nltk_tagging import process_message
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -22,7 +23,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': 'joined',
+                'message': 'has joined',
+                'category' : 'joining',
+                'is_fog' : False,
                 'username': str(username)
             }
         )
@@ -41,13 +44,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         username = data['username']
         room = data['room']
 
-        await self.save_message(username, room, message)
+        is_fog = False
+
+        if message[0:3].lower() == 'fog':
+            is_fog = True
+            message = message[3:]
+            await self.save_message(username, room, message, True)
+        else:
+            await self.save_message(username, room, message)
 
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': 'chat_message',
+                'category' : 'message',
+                'is_fog' : is_fog,
                 'message': message,
                 'username': username
             }
@@ -55,18 +67,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     # Receive message from room group
     async def chat_message(self, event):
+        category = event['category']
         message = event['message']
         username = event['username']
+        is_fog = event['is_fog']
 
         # Send message to WebSocket
+        if is_fog:
+            message = process_message(message)
+
         await self.send(text_data=json.dumps({
+            'category' : category,
             'message': message,
-            'username': username
+            'username': username,
+            'is_fog' : is_fog
         }))
 
     @sync_to_async
-    def save_message(self, username, room, message):
+    def save_message(self, username, room, message, is_fog=False):
         user = User.objects.get(username=username)
         room = Room.objects.get(slug=room)
 
-        Message.objects.create(user=user, room=room, content=message)
+        Message.objects.create(user=user, room=room, content=message, is_fog=is_fog)
