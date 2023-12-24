@@ -3,7 +3,6 @@ from nltk import word_tokenize, pos_tag
 def process_message(message):
     words = word_tokenize(message)
     tagged_words = pos_tag(words)
-    print(tagged_words)
 
     pos_color_mapping = {
         'JJ': 'orange',
@@ -27,5 +26,4 @@ def process_message(message):
                 'color_class' : color_class
             }
         )
-    print(colored_message)
     return colored_message
