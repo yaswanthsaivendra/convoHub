@@ -6,7 +6,14 @@ module.exports = {
     './*/*.py',
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors : {
+        'primary' : '#331D2C',
+        'secondary' : '#3F2E3E',
+        'teritiary' : '#A78295',
+  
+      },
+    },
   },
   plugins: [],
 }

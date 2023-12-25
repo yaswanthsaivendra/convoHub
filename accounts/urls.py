@@ -2,7 +2,9 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 from accounts.views import (home, signup, logout_view)
 
-from . import views
+
+
+app_name = 'accounts'
 
 urlpatterns = [
     path('', home, name='home'),

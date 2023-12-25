@@ -16,7 +16,7 @@ def signup(request):
 
             login(request, user)
 
-            return redirect('home')
+            return redirect('accounts:home')
     else:
         form = SignUpForm()
 
@@ -26,4 +26,4 @@ def signup(request):
 
 def logout_view(request):
     logout(request)
-    return redirect('home')
+    return redirect('accounts:home')
