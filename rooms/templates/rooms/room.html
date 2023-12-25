@@ -128,7 +128,12 @@
     document.querySelector('#chat-message-input').focus();
     document.querySelector('#chat-message-input').onkeyup = function(e) {
         if (e.keyCode === 13) {
-            document.querySelector('#chat-message-submit').click();
+            e.preventDefault();
+            const message = document.querySelector('#chat-message-input');
+
+            if (message !== '') {
+                document.querySelector('#chat-message-submit').click();
+            }
         }
     };
 
@@ -136,19 +141,25 @@
         e.preventDefault()
 
         const messageInputDom = document.querySelector('#chat-message-input');
-        const message = messageInputDom.value;
+        const message = messageInputDom.value.trim();
+        
 
-        console.log({
+        if(message !== '') {
+            console.log({
             'message': message,
             'username': userName,
             'room': roomName
-        })
+            })
 
-        chatSocket.send(JSON.stringify({
-            'message': message,
-            'username': userName,
-            'room': roomName
-        }));
+            chatSocket.send(JSON.stringify({
+                'message': message,
+                'username': userName,
+                'room': roomName
+            }));
+
+        }
+
+        
 
         messageInputDom.value = '';
 
